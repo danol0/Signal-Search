@@ -1,18 +1,10 @@
-################################################################################################################
-# Assuming these true values, generate a single high-statistics sample                                         #
-# (containing 100K events) from this probability distribution. Use an estimation                               #
-# method to obtain an estimate for the parameters of the model, along with                                     #
-# uncertainties on those estimates, using the generated sample. Make a plot which                              #
-# shows the generated sample, along with the estimates of the signal, background                               #
-# and total probability all overlaid.                                                                          #
-################################################################################################################
-
 from utils.distributions import numbaImplementation, analyticalImplementation
 from utils.tools import accept_reject
 import matplotlib.pyplot as plt
 import numpy as np
 from iminuit import Minuit
 from iminuit.cost import UnbinnedNLL
+plt.style.use('src/utils/mphil.mplstyle')
 
 # *************************************************************************************************************
 # ******************************************** Generate the sample ********************************************
@@ -48,9 +40,9 @@ nll = UnbinnedNLL(sample, nf.pdf)
 mi = Minuit(nll, f=0.11, lam=0.55, mu=5.25, sg=0.02)
 
 # set error definition
-mi_h1.errordef = Minuit.LIKELIHOOD
+mi.errordef = Minuit.LIKELIHOOD
 
-# add limits: 0 < f < 1, 0 < lam, a < mu < b, 0 < sg
+# add limits
 mi.limits = [(0, 1), (0, None), (α, β), (0, None)]
 
 # assign errors
@@ -79,8 +71,10 @@ y_n = y / (bin_width * np.sum(y))
 y_error = y_n * (1 / y + 1 / (np.sum(y)))**0.5
 
 # plot the sample and fit
-plt.errorbar(x, y_n, y_error, label='Data', fmt='o', ms=3, capsize=4, capthick=1, elinewidth=1)
-plt.plot(x, nf.pdf(x, *est), label='Fit')
+fig = plt.figure(figsize=(8, 6))
+
+plt.errorbar(x, y_n, y_error, label='Sample', fmt='o', ms=3, capsize=4, capthick=1, elinewidth=1)
+plt.plot(x, nf.pdf(x, *est), label='Fitted distribution')
 plt.plot(x, est['f'] * nf.signal_pdf(x, est['mu'], est['sg']), label='Signal (scaled)', linestyle='--')
 plt.plot(x, (1 - est['f']) * nf.background_pdf(x, est['lam']), label='Background (scaled)', linestyle='--')
 
@@ -98,7 +92,8 @@ legend_text = f"Estimated values:\n"\
 plt.plot([], [], ' ', label=legend_text)
 
 plt.legend()
-plt.show()
 
 # save the figure
-plt.savefig('results/part_e.png', bbox_inches='tight')
+plt.savefig('results/part_e_result.png')
+
+plt.show()
