@@ -70,7 +70,7 @@ def minuit_fit(sample, binned=False):
 
 
 # function to run simulation study
-def simulation_study(sample_sizes, repeats, H0=False):
+def simulation_study(sample_sizes, repeats, H0=False, binned=False):
     output = []
 
     # for each sample size
@@ -87,7 +87,7 @@ def simulation_study(sample_sizes, repeats, H0=False):
                     sample = inverse_cdf_generator(0.1, s)
 
                 # fit the sample
-                mi_h0, mi_h1 = minuit_fit(sample, binned=True)
+                mi_h0, mi_h1 = minuit_fit(sample, binned=binned)
 
                 # if fit is valid, append the log likelihood difference
                 if mi_h0.valid and mi_h1.valid:
@@ -109,20 +109,26 @@ def simulation_study(sample_sizes, repeats, H0=False):
 # ******************************************** Run Simulation *************************************************
 # *************************************************************************************************************
 
+# set binned or unbinned
+binned = False
+
 # define sample sizes
 sample_sizes = np.linspace(100, 1000, 10, dtype=int)
 
 # run simulation study
-#sim = simulation_study(sample_sizes, repeats=50000)
+#sim = simulation_study(sample_sizes, repeats=100_000, binned=binned)
 
 # run for H0 at a single sample size for plotting T0
-#H0_sim = simulation_study([1000], repeats=50000, H0=True)
+#H0_sim = simulation_study([1000], repeats=100_000, H0=True, binned=binned)
 
 # save results
-#with open("results/part_f_results_binned.pkl", "wb") as f: pickle.dump([sim, H0_sim], f)
+#if binned:
+#    with open("results/part_f_results_binned.pkl", "wb") as f: pickle.dump([sim, H0_sim], f)
+#else:
+#    with open("results/part_f_results.pkl", "wb") as f: pickle.dump([sim, H0_sim], f)
 
 # load results
-with open('results/part_f_results_binned.pkl', 'rb') as f: sim, H0_sim = pickle.load(f)
+with open('results/part_f_results.pkl', 'rb') as f: sim, H0_sim = pickle.load(f)
 
 
 # *************************************************************************************************************
@@ -201,6 +207,6 @@ ax4.legend()
 plt.tight_layout()
 
 # save figure
-plt.savefig("results/part_f_results_binned.png")
+plt.savefig("results/part_f_results_binned.png") if binned else plt.savefig("results/part_f_results.png")
 
 plt.show()

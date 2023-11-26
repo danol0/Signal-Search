@@ -82,13 +82,14 @@ class numbaImplementation:
 
     def cdf(self, M, f, lam, mu, sg):
         low, high = (self.a - mu) / sg, (self.b - mu) / sg
-        return f * truncnorm.cdf(M, xmin=low, xmax=high, loc=mu, scale=sg) + (
-            1 - f
-        ) * truncexpon.cdf(M, xmin=self.a, xmax=self.b, loc=self.a, scale=1 / lam)
+        return (
+            f * truncnorm.cdf(M, xmin=low, xmax=high, loc=mu, scale=sg) 
+            + (1 - f) * truncexpon.cdf(M, xmin=self.a, xmax=self.b, loc=self.a, scale=1 / lam)
+        )
 
     def two_signal_cdf(self, M, f1, f2, lam, mu1, mu2, sg):
         return (
-            f1 * truncnorm.cdf(M, xmin=self.a, xmax=self.b)
+            f1 * truncnorm.cdf(M, xmin=self.a, xmax=self.b, loc=mu1, scale=sg)
             + f2 * truncnorm.cdf(M, xmin=self.a, xmax=self.b, loc=mu2, scale=sg)
             + (1 - f1 - f2) * truncexpon.cdf(M, xmin=self.a, xmax=self.b, loc=self.a, scale=1 / lam)
         )
