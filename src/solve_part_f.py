@@ -7,6 +7,7 @@ from tqdm import tqdm
 from scipy.stats import chi2
 import matplotlib.gridspec as gs
 import pickle
+plt.style.use('src/utils/mphil.mplstyle')
 
 # set random seed
 np.random.seed(0)
@@ -112,16 +113,16 @@ def simulation_study(sample_sizes, repeats, H0=False):
 sample_sizes = np.linspace(100, 1000, 10, dtype=int)
 
 # run simulation study
-sim = simulation_study(sample_sizes, repeats=50000)
+#sim = simulation_study(sample_sizes, repeats=50000)
 
 # run for H0 at a single sample size for plotting T0
-H0_sim = simulation_study([1000], repeats=50000, H0=True)
+#H0_sim = simulation_study([1000], repeats=50000, H0=True)
 
 # save results
-with open("results/part_f_results_binned.pkl", "wb") as f: pickle.dump([sim, H0_sim], f)
+#with open("results/part_f_results_binned.pkl", "wb") as f: pickle.dump([sim, H0_sim], f)
 
 # load results
-#with open('results/part_f_results.pkl', 'rb') as f: sim, H0_sim = pickle.load(f)
+with open('results/part_f_results_binned.pkl', 'rb') as f: sim, H0_sim = pickle.load(f)
 
 
 # *************************************************************************************************************
@@ -200,6 +201,6 @@ ax4.legend()
 plt.tight_layout()
 
 # save figure
-plt.savefig("results/part_f_results.png")
+plt.savefig("results/part_f_results_binned.png")
 
 plt.show()
