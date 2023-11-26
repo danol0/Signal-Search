@@ -2,7 +2,7 @@ from utils.distributions import numbaImplementation, analyticalImplementation
 import matplotlib.pyplot as plt
 import numpy as np
 from iminuit import Minuit
-from iminuit.cost import UnbinnedNLL
+from iminuit.cost import UnbinnedNLL, BinnedNLL
 from tqdm import tqdm
 from scipy.stats import chi2
 import matplotlib.gridspec as gs
@@ -42,8 +42,13 @@ def inverse_cdf_generator(f, samples):
 
 
 # fit function: fits h0 and h1 to the sample and returns the Minuit instances
-def unbinned_fit(sample):
-    nll = UnbinnedNLL(sample, nf.pdf)
+def minuit_fit(sample, binned=False):
+
+    if binned:
+        hist, bin_edges = np.histogram(sample, bins=int(len(sample)**0.5), range=(α,β))
+        nll = BinnedNLL(hist, bin_edges, nf.cdf)
+    else:
+        nll = UnbinnedNLL(sample, nf.pdf)
 
     # H0: f = 0
     mi_h0 = Minuit(nll, f=0, lam=lam, mu=mu, sg=sg)
@@ -81,7 +86,7 @@ def simulation_study(sample_sizes, repeats, H0=False):
                     sample = inverse_cdf_generator(0.1, s)
 
                 # fit the sample
-                mi_h0, mi_h1 = unbinned_fit(sample)
+                mi_h0, mi_h1 = minuit_fit(sample, binned=True)
 
                 # if fit is valid, append the log likelihood difference
                 if mi_h0.valid and mi_h1.valid:
@@ -113,7 +118,7 @@ sim = simulation_study(sample_sizes, repeats=50000)
 H0_sim = simulation_study([1000], repeats=50000, H0=True)
 
 # save results
-with open("results/part_f_results.pkl", "wb") as f: pickle.dump([sim, H0_sim], f)
+with open("results/part_f_results_binned.pkl", "wb") as f: pickle.dump([sim, H0_sim], f)
 
 # load results
 #with open('results/part_f_results.pkl', 'rb') as f: sim, H0_sim = pickle.load(f)
