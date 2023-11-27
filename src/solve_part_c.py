@@ -21,10 +21,10 @@ sf = scipyImplementation(α, β)
 f = 0.2
 lam = 0.5
 mu = 5.3
-sg = 0.5
+sg = 1
 
 theta = [f, lam, mu, sg]
 
-print("Analytical integration: ", quad(lambda x: af.pdf(x, *theta), α, β))
-print("Numba integration: ", quad(lambda x: nf.pdf(x, *theta), α, β))
-print("Scipy integration: ", quad(lambda x: sf.pdf(x, *theta), α, β))
+print("Analytical implimentation: ", quad(lambda x: af.pdf(x, *theta), α, β))
+print("Numba implimentation: ", quad(lambda x: nf.pdf(x, *theta), α, β))
+print("Scipy implimentation: ", quad(lambda x: sf.pdf(x, *theta), α, β))
