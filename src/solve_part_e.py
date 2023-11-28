@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from iminuit import Minuit
 from iminuit.cost import UnbinnedNLL
-plt.style.use('src/utils/mphil.mplstyle')
 import matplotlib.gridspec as gs
 from numba_stats import norm
+plt.style.use('src/utils/mphil.mplstyle')
 
 # *************************************************************************************************************
 # ******************************************** Generate the sample ********************************************
@@ -32,7 +32,7 @@ sg = 0.018
 theta = [f, lam, mu, sg]
 
 # generate sample - note that using the analytical pdf is fastest
-sample = accept_reject(f=lambda x: af.pdf(x, *theta), xlim=[α, β], samples=100000)
+sample = accept_reject(f=lambda x: af.pdf(x, *theta), xlim=[α, β], samples=100_000)
 
 # *************************************************************************************************************
 # *********************************************** Fit the sample **********************************************
@@ -64,7 +64,7 @@ est = mi.values
 # *************************************************************************************************************
 
 # create histogram
-bins = 85
+bins = 75
 y, x = np.histogram(sample, bins=bins, range=[α, β])
 bin_width = x[1] - x[0]
 

@@ -1,10 +1,3 @@
-####################################################################################################
-# Code these expressions for the probability density in python, in any way you so                  #
-# desire. Plugging in some different values for the parameters 𝜽, use a numerical                  #
-# integration to convince yourself that the total probability density integrates to unity          #
-# in the range 𝑀 ∈ [5, 5.6].                                                                       #
-####################################################################################################
-
 from utils.distributions import analyticalImplementation, numbaImplementation, scipyImplementation
 from scipy.integrate import quad
 
