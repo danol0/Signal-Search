@@ -1,4 +1,5 @@
 from utils.distributions import numbaImplementation, analyticalImplementation
+from utils.tools import accept_reject
 import matplotlib.pyplot as plt
 import numpy as np
 from iminuit import Minuit
@@ -7,7 +8,14 @@ from tqdm import tqdm
 from scipy.stats import chi2
 import matplotlib.gridspec as gs
 import pickle
+import multiprocessing as mp
 plt.style.use('src/utils/mphil.mplstyle')
+
+
+# *************************************************************************************************************
+# ************************************* Initialise Parameters *************************************************
+# *************************************************************************************************************
+
 
 # set random seed
 np.random.seed(0)
@@ -32,14 +40,6 @@ theta = [f, lam, mu, sg]
 # *************************************************************************************************************
 # ************************************ Set Up Simulation Study ************************************************
 # *************************************************************************************************************
-
-# we will use inverse cdf method to generate samples as it is faster than accept_reject
-def inverse_cdf_generator(f, samples):
-    u = np.random.random(samples)
-    n = np.random.random(samples)
-    events = np.empty(samples)
-    events = [nf.signal_inv_cdf(u[i], mu, sg) if n[i] < f else nf.background_inv_cdf(u[i], lam) for i in range(samples)]
-    return events
 
 
 # fit function: fits h0 and h1 to the sample and returns the Minuit instances
@@ -82,9 +82,9 @@ def simulation_study(sample_sizes, repeats, H0=False, binned=False):
             for _ in range(repeats):
                 # generate a sample
                 if H0:
-                    sample = inverse_cdf_generator(0, s)
+                    sample = accept_reject(f=lambda x: nf.background_pdf(x, lam), xlim=[α, β], samples=s)
                 else:
-                    sample = inverse_cdf_generator(0.1, s)
+                    sample = accept_reject(f=lambda x: af.pdf(x, *theta), xlim=[α, β], samples=s)
 
                 # fit the sample
                 mi_h0, mi_h1 = minuit_fit(sample, binned=binned)
@@ -105,6 +105,37 @@ def simulation_study(sample_sizes, repeats, H0=False, binned=False):
     return output
 
 
+def run_repeat(args):
+    s, repeats, H0, binned = args
+    delta_Ls = []
+    for _ in range(repeats):
+        # generate a sample
+        if H0:
+            sample = accept_reject(f=lambda x: nf.background_pdf(x, lam), xlim=[α, β], samples=s)
+        else:
+            sample = accept_reject(f=lambda x: af.pdf(x, *theta), xlim=[α, β], samples=s)
+
+        # fit the sample
+        mi_h0, mi_h1 = minuit_fit(sample, binned=binned)
+
+        # if fit is valid, append the log likelihood difference
+        if mi_h0.valid and mi_h1.valid:
+            T = mi_h0.fval - mi_h1.fval
+            delta_Ls.append(T)
+        # otherwise, append nan
+        else:
+            delta_Ls.append(np.nan)
+    return delta_Ls
+
+
+def simulation_study_parallel(sample_sizes, repeats, H0=False, binned=False):
+    with mp.Pool() as pool:
+        args = [(s, repeats, H0, binned) for s in sample_sizes]
+        output = pool.map(run_repeat, args)
+
+    return output
+
+
 # *************************************************************************************************************
 # ******************************************** Run Simulation *************************************************
 # *************************************************************************************************************
@@ -116,31 +147,56 @@ binned = False
 sample_sizes = np.linspace(100, 1000, 10, dtype=int)
 
 # run simulation study
-#sim = simulation_study(sample_sizes, repeats=100_000, binned=binned)
+sim = simulation_study(sample_sizes, repeats=100000, binned=binned)
 
-# run for H0 at a single sample size for plotting T0
-#H0_sim = simulation_study([1000], repeats=100_000, H0=True, binned=binned)
+# # run for H0 at a single sample size for plotting T0
+H0_sim = simulation_study([1000], repeats=100000, H0=True, binned=binned)
 
-# save results
-#if binned:
-#    with open("results/part_f_results_binned.pkl", "wb") as f: pickle.dump([sim, H0_sim], f)
-#else:
-#    with open("results/part_f_results.pkl", "wb") as f: pickle.dump([sim, H0_sim], f)
+# # save results
+if binned:
+    with open("results/part_f_results_binned.pkl", "wb") as f: pickle.dump([sim, H0_sim], f)
+else:
+    with open("results/part_f_results.pkl", "wb") as f: pickle.dump([sim, H0_sim], f)
 
-# load results
-with open('results/part_f_results.pkl', 'rb') as f: sim, H0_sim = pickle.load(f)
+# load data
+# if binned:
+#     with open('results/part_f_results_binned.pkl', 'rb') as f: sim, H0_sim = pickle.load(f)
+# else:
+#     with open('results/part_f_results.pkl', 'rb') as f: sim, H0_sim = pickle.load(f)
+
+
+# *************************************************************************************************************
+# ********************************* Find DOF for H0 & Calculate P values **************************************
+# *************************************************************************************************************
+
+# remove nans. Note pickle loads as 1 x n array, so taking 0th index
+H0_fit = [i for i in H0_sim[0] if not np.isnan(i)]
+
+
+# define chi2 distribution for fitting
+def chi2_fit(x, dof):
+    return chi2.pdf(x, dof)
+
+# fit the chi2 distribution
+nll = UnbinnedNLL(H0_fit, chi2_fit)
+mi = Minuit(nll, dof=1)
+mi.errordef = Minuit.LIKELIHOOD
+mi.migrad()
+
+# extract the dof
+dof = mi.values['dof']
+
+# calculate p-values
+pvals = chi2.sf(sim, dof)
+avg_pvals = np.nanmedian(pvals, axis=1)
+std_pvals = np.nanstd(pvals, axis=1)
+q_90_pvals = np.nanquantile(pvals, 0.9, axis=1)
+q_10_pvals = np.nanquantile(pvals, 0.1, axis=1)
 
 
 # *************************************************************************************************************
 # ****************************************** Plot results *****************************************************
 # *************************************************************************************************************
-
-# calculate p-values
-pvals = chi2.sf(sim, 1)
-avg_pvals = np.nanmedian(pvals, axis=1)
-std_pvals = np.nanstd(pvals, axis=1)
-q_90_pvals = np.nanquantile(pvals, 0.9, axis=1)
-q_10_pvals = np.nanquantile(pvals, 0.1, axis=1)
 
 # create figure
 fig = plt.figure(figsize=(14, 8))
@@ -160,46 +216,41 @@ ax1.set_yscale("log")
 ax1.axhline(2.9e-7, color="k", linestyle="--", label="5 Sigma")
 ax1.set_xlabel("Sample Size")
 ax1.set_ylabel("p-value")
-ax1.set_title("Median p-value vs Sample Size")
+ax1.set_title("Median p-value vs n")
 ax1.legend()
 
-# plot 2: Fraction with p-value < 2.9e-7 vs Sample Size
+# plot 2: Power vs Sample Size
 y = np.mean(pvals < 2.9e-7, axis=1)
+# sample error of a proportion is binomial error
 y_e = np.sqrt(y * (1 - y) / len(pvals[0]))
-#ax2.plot(sample_sizes, y, "o-", label="Data")
 ax2.errorbar(sample_sizes, y, y_e, label="Data", fmt="o", ms=3, capsize=3, capthick=1, elinewidth=1, linestyle="-")
-ax2.set_xlabel("Sample Size")
-ax2.set_title("Fraction of p-values < 2.9e-7")
-ax2.set_ylabel("Fraction")
+ax2.set_xlabel("n")
+ax2.set_title("Power vs n (σ = 5)")
+ax2.set_ylabel("Power")
 ax2.axhline(0.9, color="k", linestyle="--")
 
 # plot 3: T distribution under H1
-for dist in sim:
+for n, dist in enumerate(sim):
     ax3.hist(dist, bins=80, density=True, alpha=0.4)
-ax3.axvline(chi2.ppf(1 - 2.9e-7, 1), color="k", linestyle="--", label="T0: 5 sigma (analytical)")
+ax3.axvline(chi2.ppf(1 - 2.9e-7, dof), linestyle="--", label="$T_0$ (χ2 fit at σ = 5)", color="orange")
 ax3.set_xlabel("T")
-ax3.set_ylabel("p(T)")
+ax3.set_ylabel("$P(T|H_1)$")
 ax3.set_ylim(0, 0.08)
-ax3.set_title("Test statistic distribution under H1 for sample sizes 100 - 1000")
-ax3.set_xlim(0, 120)
+ax3.set_title("T distribution under $H_1$ for sample sizes 100 - 1000")
+ax3.set_xlim(0, 100)
 ax3.legend()
 
 # plot 4: T distribution under H0
-ax4.hist(H0_sim, bins=100, density=True, label="H0")
-ax4.axvline(np.nanquantile(H0_sim, 1 - 2.9e-7), linestyle="--", label="T0 (simulated)")
-ax4.hist(sim[1], bins=80, density=True, label="s = 200", histtype="step")
-ax4.axvline(np.nanquantile(sim[1], 0.1), linestyle="--", label="10% quantile for s=200", color="orange")
-ax4.hist(sim[5], bins=80, density=True, label="s = 600", alpha=0.5)
-ax4.axvline(np.nanquantile(sim[5], 0.1), linestyle="--", label="10% quantile for s=600", color="limegreen")
+ax4.hist(H0_sim, bins=100, density=True, label="$P(T|H_0)$")
+ax4.plot(np.linspace(0, 100, 200), chi2.pdf(np.linspace(0, 100, 200), dof), label=f"χ2 fit, dof = {dof:.2f}")
+# we can estimate the 5 sigma quantile from the simulated distribution
+ax4.axvline(np.nanquantile(H0_sim, 1 - 2.9e-7), linestyle="--", label="$T_0$ (simulated)")
+ax4.axvline(chi2.ppf(1 - 2.9e-7, dof), linestyle="--", label="$T_0$ (χ2 fit at σ = 5)", color="orange")
+ax4.hist(sim[7], bins=80, density=True, label="$P(T|H_1)$ for n=800", alpha=0.5)
+ax4.axvline(np.nanquantile(sim[7], 0.1), linestyle="--", label="10% quantile for n=800", color="limegreen")
 ax4.set_ylim(0, 0.08)
 ax4.set_xlim(0, 100)
-ax4.annotate(
-    "T0 (analytical)",
-    xy=(chi2.ppf(1 - 2.9e-7, 1), 0),
-    xytext=(chi2.ppf(1 - 2.9e-7, 1), -0.01),
-    arrowprops=dict(width=0.1, headwidth=0, facecolor="black", shrink=0.0001),
-)
-ax4.set_title("Test statistic distrbutions under H0 and H1 with relevant quantiles")
+ax4.set_title("Test statistic distrbutions under H0 and H1")
 ax4.set_xlabel("T")
 ax4.set_ylabel("p(T)")
 ax4.legend()
