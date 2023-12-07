@@ -5,10 +5,10 @@ from scipy.integrate import quad
 α = 5
 β = 5.6
 
-# Create instances
-af = analyticalImplementation(α, β)
-nf = numbaImplementation(α, β)
-sf = scipyImplementation(α, β)
+# Create pdf instances
+analytical = analyticalImplementation(α, β)
+numba = numbaImplementation(α, β)
+scipy = scipyImplementation(α, β)
 
 # Define some parameters
 f = 0.2
@@ -18,6 +18,6 @@ sg = 1
 
 theta = [f, lam, mu, sg]
 
-print("Analytical implimentation: ", quad(lambda x: af.pdf(x, *theta), α, β))
-print("Numba implimentation: ", quad(lambda x: nf.pdf(x, *theta), α, β))
-print("Scipy implimentation: ", quad(lambda x: sf.pdf(x, *theta), α, β))
+print("Analytical implementation: ", quad(lambda x: analytical.pdf(x, *theta), α, β))
+print("Numba implementation: ", quad(lambda x: numba.pdf(x, *theta), α, β))
+print("Scipy implementation: ", quad(lambda x: scipy.pdf(x, *theta), α, β))
