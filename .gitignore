@@ -3,3 +3,5 @@ report/*
 !report/report.tex
 !report/report.pdf
 *ipynb
+results/*
+*.pyc
