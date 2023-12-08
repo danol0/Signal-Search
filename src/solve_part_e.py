@@ -26,7 +26,7 @@ mu = 5.28
 sg = 0.018
 theta = [f, lam, mu, sg]
 
-# create instance
+# create pdf instance
 numba = numbaImplementation(α, β)
 
 # generate the sample

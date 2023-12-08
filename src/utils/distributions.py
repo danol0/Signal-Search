@@ -4,11 +4,13 @@ from scipy.stats import truncnorm as tnorm
 from scipy.special import erf
 from math import e, pi
 
-# This module contains the analytical, numba and scipy implementations of the various 
-# distribution functions. They have been separated into different classes for ease of use
+# This module contains the analytical, numba and scipy implementations of the various
+# distribution functions. They have been separated into different classes for ease of use.
 
-# Aside from the section comparing their efficiencies, the project has been completed 
-# exclusively using the numba implementation
+# Aside from the section comparing their efficiencies, the project uses the numba-stats
+# implementation exclusively. See section 2.3 of the report for more details.
+
+
 class numbaImplementation:
 
     def __init__(self, a, b):
@@ -36,7 +38,7 @@ class numbaImplementation:
     def cdf(self, M, f, lam, mu, sg):
         low, high = (self.a - mu) / sg, (self.b - mu) / sg
         return (
-            f * truncnorm.cdf(M, xmin=low, xmax=high, loc=mu, scale=sg) 
+            f * truncnorm.cdf(M, xmin=low, xmax=high, loc=mu, scale=sg)
             + (1 - f) * truncexpon.cdf(M, xmin=self.a, xmax=self.b, loc=self.a, scale=1 / lam)
         )
 
