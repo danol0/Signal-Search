@@ -94,6 +94,7 @@ run = False
 sample_sizes = np.linspace(100, 1000, 10, dtype=int)
 
 if run:
+    print("Running simulation study...")
     # run simulation study
     # sim is a list of lists, each list contains the test statistics for a given sample size
     sim = simulation_study(
@@ -123,6 +124,7 @@ if run:
         pickle.dump([sim, H0_sim], f)
 
 else:
+    print("File running from saved results...")
     # load results
     with open("results/part_f_results.pkl", "rb") as f:
         sim, H0_sim = pickle.load(f)

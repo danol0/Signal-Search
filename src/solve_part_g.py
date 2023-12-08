@@ -87,12 +87,13 @@ def two_peak_test(sample, binned=False):
 # *************************************************************************************************************
 
 # set to True to run the simulation study, False to load results from file
-run = False
+run = True
 
 # define sample sizes
 sample_sizes = np.linspace(1500, 4000, 8, dtype=int)
 
 if run:
+    print("Running simulation study...")
     # run simulation study
     sim = simulation_study(
         sample_sizes=sample_sizes,
@@ -120,6 +121,7 @@ if run:
         pickle.dump([sim, H0_sim], f)
 
 else:
+    print("File running from saved results...")
     # load results
     with open("results/part_g_results.pkl", "rb") as f:
         sim, H0_sim = pickle.load(f)

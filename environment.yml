@@ -1,11 +1,12 @@
-name: PDS_CW
+name: do382_PDS_CW
 channels:
   - defaults
+  - conda-forge
 dependencies:
-  - python=3.8
-  - iminuit=2.24.0
-  - matplotlib=3.8.2
-  - numba_stats=1.4.1
-  - numpy=1.26.2
-  - scipy=1.11.4
-  - tqdm=4.66.1
+  - python=3.11.5
+  - iminuit
+  - matplotlib
+  - numba-stats
+  - numpy
+  - scipy
+  - tqdm
