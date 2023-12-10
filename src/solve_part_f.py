@@ -4,7 +4,6 @@ from iminuit.cost import UnbinnedNLL, BinnedNLL
 from iminuit import Minuit
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.stats import chi2
 import pickle
 
 plt.style.use("src/utils/mphil.mplstyle")
@@ -133,8 +132,8 @@ else:
 # ******************************** Find DOF for H0 and Plot Results *******************************************
 # *************************************************************************************************************
 
-dof = fit_chi2_dof(H0_sim)
+dof, dof_e = fit_chi2_dof(H0_sim)
 
 plot_simulation_study(
-    H0_sim=H0_sim, sim=sim, sample_sizes=sample_sizes, dof=dof, file_name="part_f"
+    H0_sim=H0_sim, sim=sim, sample_sizes=sample_sizes, dof=dof, dof_e=dof_e, file_name="part_f"
 )

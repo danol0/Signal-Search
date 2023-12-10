@@ -3,7 +3,6 @@ from utils.tools import simulation_study, plot_simulation_study, fit_chi2_dof
 from iminuit.cost import UnbinnedNLL, BinnedNLL
 from iminuit import Minuit
 import numpy as np
-from scipy.stats import chi2
 import pickle
 
 # *************************************************************************************************************
@@ -79,6 +78,10 @@ def two_peak_test(sample, binned=False):
     mi_h1.migrad()
     mi_h1.hesse()
 
+    # check that the f parameters are within physical bounds
+    if mi_h1["f1"] + mi_h1["f2"] > 1:
+        mi_h1.valid = False
+
     return mi_h0, mi_h1
 
 
@@ -87,7 +90,7 @@ def two_peak_test(sample, binned=False):
 # *************************************************************************************************************
 
 # set to True to run the simulation study, False to load results from file
-run = True
+run = False
 
 # define sample sizes
 sample_sizes = np.linspace(1500, 4000, 8, dtype=int)
@@ -130,8 +133,8 @@ else:
 # ******************************** Find DOF for H0 and Plot Results *******************************************
 # *************************************************************************************************************
 
-dof = fit_chi2_dof(H0_sim)
+dof, dof_e = fit_chi2_dof(H0_sim)
 
 plot_simulation_study(
-    H0_sim=H0_sim, sim=sim, sample_sizes=sample_sizes, dof=dof, file_name="part_g"
+    H0_sim=H0_sim, sim=sim, sample_sizes=sample_sizes, dof=dof, dof_e=dof_e, file_name="part_g"
 )
