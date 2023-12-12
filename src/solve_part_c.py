@@ -60,7 +60,7 @@ for i in xs:
         list.append(np.mean(times))
 
 # plot the results
-plt.figure(figsize=(7, 5))
+plt.figure(figsize=(8, 6))
 plt.style.use('src/utils/mphil.mplstyle')
 
 plt.plot(xs, np.array(analytical_times) / np.array(analytical_times), label='Analytical', color='tab:blue', linestyle='--')

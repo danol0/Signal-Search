@@ -167,21 +167,22 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
 
     # -------- Calculate p-values and power, with propagated errors
 
-    # critical value for 5σ
+    # define critical value at 5σ for plotting
     T_c = chi2.ppf(1 - 2.9e-7, dof)
 
     # function for estimating power per sample size for error propagation
+    # defining the critical value again in this function allows jacobi to propagate the error
     def estimate_power(dof):
-        pvals = chi2.sf(sim, dof)
-        power = np.mean(pvals < 2.9e-7, axis=1)
+        critical_value = chi2.ppf(1 - 2.9e-7, dof)
+        power = np.mean(sim > critical_value, axis=1)
         return power
 
     # estimate power and error
     power, power_var = propagate(estimate_power, dof, dof_e**2, diagonal=True)  # use jacobi to propagate errors
     power_e = np.sqrt(power_var)  # take square root of variance to get standard error
 
-    # add statistical (binomial) error to power error
-    power_e += np.sqrt(power * (1 - power) / len(sim[0]))
+    # add statistical (binomial) error to power error in quadrature
+    power_e = np.sqrt(power_e ** 2 + power * (1 - power) / len(sim[0]))
 
     # To estimate the sample size for 90% power, we fit a sigmoid to the power vs sample size and
     # interpolate the sample size needed for 90% power. We can again propagate the errors using jacobi
