@@ -102,7 +102,7 @@ def simulation_study(sample_sizes, repeats, pdf, pdf_params, xlim, fit, binned=F
                 if mi_h0.valid and mi_h1.valid:
                     # Note that factor of 2 is included in the iminuit definition of fval
                     T = mi_h0.fval - mi_h1.fval
-                    # Assign negative test statistics to 0, see https://arxiv.org/abs/1007.1727 section 2.2
+                    # Assign negative test statistics to 0, ref https://arxiv.org/abs/1007.1727 section 2.2
                     if T < 0:
                         T = 0
                     test_statistics.append(T)
@@ -147,8 +147,7 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
     The plots are:
         1. The T distribution under H0.
         2. The T distribution under H1.
-        3. The p-value vs sample size.
-        4. The power vs sample size.
+        3. The power vs sample size.
 
     The calculations error propagation is carried out in the top of the function.
 
@@ -168,16 +167,10 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
 
     # -------- Calculate p-values and power, with propagated errors
 
-    # calculate p-values
-    pvals = chi2.sf(sim, dof)
-    avg_pvals = np.nanmedian(pvals, axis=1)
-    q_90_pvals = np.nanquantile(pvals, 0.9, axis=1)
-    q_10_pvals = np.nanquantile(pvals, 0.1, axis=1)
-
     # critical value for 5σ
     T_c = chi2.ppf(1 - 2.9e-7, dof)
 
-    # function for estimating power per sample size
+    # function for estimating power per sample size for error propagation
     def estimate_power(dof):
         pvals = chi2.sf(sim, dof)
         power = np.mean(pvals < 2.9e-7, axis=1)
@@ -185,13 +178,13 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
 
     # estimate power and error
     power, power_var = propagate(estimate_power, dof, dof_e**2, diagonal=True)  # use jacobi to propagate errors
-    power_e = np.sqrt(power_var)  # take square root of variance to get error
+    power_e = np.sqrt(power_var)  # take square root of variance to get standard error
 
     # add statistical (binomial) error to power error
     power_e += np.sqrt(power * (1 - power) / len(sim[0]))
 
-    # to estimate the sample size for 90% power, we fit a sigmoid to the power vs sample size
-    # and interpolate the sample size for 90% power. we can again propagate the errors using jacobi
+    # To estimate the sample size for 90% power, we fit a sigmoid to the power vs sample size and
+    # interpolate the sample size needed for 90% power. We can again propagate the errors using jacobi
 
     # define sigmoid function
     def sigmoid(x, a, b, c, d):
@@ -200,7 +193,7 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
     # define x values for sigmoid fit and plotting
     x = np.linspace(sample_sizes[0], sample_sizes[-1], 300)
 
-    # function for estimating 90% power from sigmoid fit
+    # function for estimating 90% power from sigmoid fit for error propagation
     def estimate_intercept(power):
         popt, _ = curve_fit(sigmoid, sample_sizes, power, p0=[1, 0, np.median(sample_sizes), 0], maxfev=10000)
         return np.interp(0.9, sigmoid(x, *popt), x)
@@ -234,45 +227,29 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
 
     # -------- Plot 2: T distribution under H1
 
-    plt.figure(figsize=(12, 5))
-    for dist in sim:
-        plt.hist(dist, bins=90, density=True, alpha=0.35)
+    plt.figure(figsize=(11, 5))
+    for i, dist in enumerate(sim):
+        plt.hist(dist, bins=90, density=True, alpha=0.35, label=sample_sizes[i])
     plt.axvline(
         T_c,
         linestyle="--",
         label="$T_c$ (χ2 fit at σ = 5)",
         color="k",
-        linewidth=1,
+        linewidth=1.2,
     )
     plt.xlabel("T")
     plt.ylabel("$P(T|H_1)$")
     plt.ylim(0, 0.08)
     plt.xlim(0, 100)
-    plt.legend()
+    plt.legend(title='Sample Size', ncols=2)
     plt.savefig("report/figures/" + file_name + "_H1_distribution.png")
 
-    # -------- Plots 3 & 4: p-value & power vs Sample Size
+    # -------- Plot 3: Power vs Sample Size
 
-    plt.figure(figsize=(13, 5))
-    grid = gs.GridSpec(1, 2, width_ratios=[3, 4])
-    ax1 = plt.subplot(grid[0, 0])
-    ax2 = plt.subplot(grid[0, 1])
-
-    # -------- Plot 3: p-value vs Sample Size
-
-    ax1.plot(sample_sizes, avg_pvals, "-", label="Median p-value")
-    ax1.plot(sample_sizes, q_90_pvals, "--", label="90% quantile")
-    ax1.plot(sample_sizes, q_10_pvals, "--", label="10% quantile")
-    ax1.set_yscale("log")
-    ax1.axhline(2.9e-7, color="k", linestyle="--", label="σ = 5", linewidth=1)
-    ax1.set_xlabel("Sample Size")
-    ax1.set_ylabel("p-value")
-    ax1.legend()
-
-    # -------- Plot 4: Power vs Sample Size
+    plt.figure(figsize=(8, 6))
 
     # plot the power with propagated errors
-    ax2.errorbar(
+    plt.errorbar(
         sample_sizes,
         power,
         power_e,
@@ -294,23 +271,22 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
     )
 
     # plot sigmoid fit
-    ax2.plot(x, sigmoid(x, *sigmoid_fit), label="Sigmoid fit", linestyle="--", color="tab:blue")
+    plt.plot(x, sigmoid(x, *sigmoid_fit), label="Sigmoid fit", linestyle="-", color="tab:blue")
 
     # add line for critical value
-    ax2.axhline(0.9, color="k", linestyle="--", label="90% power", linewidth=1)
+    plt.axhline(0.9, color="k", linestyle="--", label="90% power", linewidth=1)
 
     # add sample size for 90% power and error
-    ax2.axvline(x90, color="tab:blue", linestyle=":")
-    ax2.axvspan(
+    plt.axvline(x90, color="tab:blue", linestyle=":", label="{:.0f} ± {:.0f} samples".format(x90, x90_e))
+    plt.axvspan(
         x90 - x90_e,
         x90 + x90_e,
         alpha=0.1,
         color="tab:blue",
-        label="{:.0f} ± {:.0f} samples".format(x90, x90_e),
     )
 
-    ax2.legend(framealpha=1)
-    ax2.set_xlabel("Sample Size")
-    ax2.set_ylabel("Power")
+    plt.legend(framealpha=1)
+    plt.xlabel("Sample Size")
+    plt.ylabel("Power")
 
     plt.savefig("report/figures/" + file_name + "_power.png")

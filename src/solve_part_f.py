@@ -5,8 +5,12 @@ from iminuit import Minuit
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
-
 plt.style.use("src/utils/mphil.mplstyle")
+
+# *********************************************** IMPORTANT ***************************************************
+# This parameter controls whether the simulation study is run or the results are loaded from file
+# Set to True to run the simulation study, or False to load from file
+run = True
 
 # *************************************************************************************************************
 # ************************************* Initialise Parameters *************************************************
@@ -85,9 +89,6 @@ def single_peak_test(sample, binned=False):
 # *************************************************************************************************************
 # ******************************************** Run Simulation *************************************************
 # *************************************************************************************************************
-
-# set to True to run the simulation study, False to load results from file
-run = False
 
 # define sample sizes
 sample_sizes = np.linspace(100, 1000, 10, dtype=int)

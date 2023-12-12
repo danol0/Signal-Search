@@ -121,7 +121,6 @@ ax_main.plot(
     label="Background (scaled)",
     linestyle="--",
     color="tab:orange",
-    linewidth=1,
 )
 ax_main.set_xlabel("M")
 ax_main.set_ylabel("Density")

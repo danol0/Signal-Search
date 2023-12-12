@@ -8,7 +8,7 @@ from math import e, pi
 # distribution functions. They have been separated into different classes for ease of use.
 
 # Aside from the section comparing their efficiencies, the project uses the numba-stats
-# implementation exclusively. See section 2.3 of the report for more details.
+# implementation exclusively. See section 1.3 of the report for more details.
 
 
 class numbaImplementation:

@@ -5,6 +5,11 @@ from iminuit import Minuit
 import numpy as np
 import pickle
 
+# *********************************************** IMPORTANT ***************************************************
+# This parameter controls whether the simulation study is run or the results are loaded from file
+# Set to True to run the simulation study, or False to load from file
+run = True
+
 # *************************************************************************************************************
 # ************************************* Initialise Parameters *************************************************
 # *************************************************************************************************************
@@ -79,7 +84,7 @@ def two_peak_test(sample, binned=False):
     mi_h1.hesse()
 
     # check that the f parameters are within physical bounds
-    if mi_h1["f1"] + mi_h1["f2"] > 1:
+    if mi_h1.values["f1"] + mi_h1.values["f2"] > 1:
         mi_h1.valid = False
 
     return mi_h0, mi_h1
@@ -88,9 +93,6 @@ def two_peak_test(sample, binned=False):
 # *************************************************************************************************************
 # ******************************************** Run Simulation *************************************************
 # *************************************************************************************************************
-
-# set to True to run the simulation study, False to load results from file
-run = False
 
 # define sample sizes
 sample_sizes = np.linspace(1500, 4000, 8, dtype=int)
