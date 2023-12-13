@@ -77,7 +77,7 @@ def simulation_study(sample_sizes, repeats, pdf, pdf_params, xlim, fit, binned=F
 
     Returns
     -------
-    output : array_like
+    sim : array_like
         A repeats x len(sample_sizes) array containing the calculated test statistics.
     """
 
