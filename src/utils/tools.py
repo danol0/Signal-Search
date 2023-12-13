@@ -128,7 +128,10 @@ def fit_chi2_dof(H0_sim):
     def chi2_fit(x, dof):
         return chi2.cdf(x, dof)
 
-    y, x = np.histogram(H0_sim, bins=300, density=True)
+    # workaround for calculating bins: pickle loads as nx1 array, so we need to check the shape
+    bins = max(int(len(H0_sim)**0.5), int(len(H0_sim[0])**0.5))
+
+    y, x = np.histogram(H0_sim, bins=bins, density=True)
     nll = BinnedNLL(y, x, chi2_fit)
 
     mi = Minuit(nll, dof=2)
@@ -136,6 +139,9 @@ def fit_chi2_dof(H0_sim):
     mi.errordef = Minuit.LIKELIHOOD  # set the errordef parameter to 0.5 for NLL to extract correct 1σ errors
     mi.migrad()
     mi.hesse()
+
+    if not mi.valid:
+        print("Warning: Invalid Chi2 Fit")
 
     return mi.values["dof"], mi.errors['dof']
 
@@ -184,8 +190,8 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
     # add statistical (binomial) error to power error in quadrature
     power_e = np.sqrt(power_e ** 2 + power * (1 - power) / len(sim[0]))
 
-    # To estimate the sample size for 90% power, we fit a sigmoid to the power vs sample size and
-    # interpolate the sample size needed for 90% power. We can again propagate the errors using jacobi
+    # To estimate the sample size for 90% power, fit a sigmoid to the power vs sample size and interpolate
+    # the sample size needed for 90% power. Can again propagate the error on this with jacobi
 
     # define sigmoid function
     def sigmoid(x, a, b, c, d):
@@ -207,7 +213,11 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
 
     bins = 100 if dof > 2 else 50   # reduce bins for small dof to avoid distorting near 0
     plt.figure(figsize=(8, 6))
-    plt.hist(H0_sim, bins=bins, density=True, label="$P(T|H_0)$", histtype="step")
+    plt.hist(H0_sim, bins=bins, density=True, label="$P(T|H_0)$", histtype="step", color='tab:blue')
+    # show T samples on x axis
+    plt.scatter(H0_sim, np.zeros_like(H0_sim), alpha=0.5, marker=2, color='tab:blue')
+    # add a single T sample for legend
+    plt.scatter(0, 0, alpha=0.5, marker=2, color='tab:blue', label="T samples")
     plt.plot(
         np.linspace(0, int(T_c * 1.1), 200),
         chi2.pdf(np.linspace(0, int(T_c * 1.1), 200), dof),
@@ -229,20 +239,31 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
     # -------- Plot 2: T distribution under H1
 
     plt.figure(figsize=(11, 5))
+    # plot the T distribution for each sample size
+    plot = []  # list to store the plots for the separate legends
     for i, dist in enumerate(sim):
-        plt.hist(dist, bins=90, density=True, alpha=0.35, label=sample_sizes[i])
-    plt.axvline(
+        p = plt.hist(dist, bins=100, density=True, alpha=0.35, label=sample_sizes[i])
+        plot.append(p)
+
+    # plot the critical value
+    Tc = plt.axvline(
         T_c,
         linestyle="--",
         label="$T_c$ (χ2 fit at σ = 5)",
         color="k",
         linewidth=1.2,
     )
+
+    # add H0 distribution for comparison
+    H0 = plt.hist(H0_sim, bins=100, density=True, label="$P(T|H_0)$", histtype="step", color="k")
+
+    legend1 = plt.legend(handles=[H0[2][0], Tc], loc="center right")
+    plt.gca().add_artist(legend1)
     plt.xlabel("T")
-    plt.ylabel("$P(T|H_1)$")
+    plt.ylabel("$P(T)$")
     plt.ylim(0, 0.08)
     plt.xlim(0, 100)
-    plt.legend(title='Sample Size', ncols=2)
+    plt.legend(handles=[p[2][0] for p in plot], title='$P(T|H_1)$ Sample Size', ncols=2)
     plt.savefig("report/figures/" + file_name + "_H1_distribution.png")
 
     # -------- Plot 3: Power vs Sample Size
