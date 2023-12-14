@@ -103,46 +103,52 @@ ex2_h0_naive, ex2_h1_naive = minuit_fit_naive(ex2_sample, binned=True)
 
 x = np.linspace(α, β-0.001, 100)
 
-fig, ax = plt.subplots(2, 2, figsize=(12, 10), sharey=True, sharex=True)
+def plot_function(ax, row, ex_sample, ex_h0_naive, ex_h1_naive, ex_h0_opt, ex_h1_opt):
 
-ax[0, 0].plot([], [], ' ', label=f'$T$ = {(ex1_h0_naive.fval-ex1_h1_naive.fval):.2f}')
-ax[0, 0].plot(x, pdf(x, *ex1_h0_naive.values), label='$H_0$', color='tab:orange')
-ax[0, 0].plot(x, pdf(x, *ex1_h1_naive.values), label='$H_1$', linestyle='--', color='tab:blue')
-ax[0, 0].hist(ex1_sample, bins=100, density=True, alpha=0.5, label='Sample', color='k', histtype='step')
-ax[0, 0].legend()
-ax[0, 0].set_title('Naive')
-ax[0, 0].set_ylabel('Density')
-ax[0, 0].set_xlim(α, β)
-plt.suptitle('Sample 1', fontsize=15)
+    ax[row, 0].plot(x, pdf(x, *ex_h1_naive.values), label='$H_1$ Fit', color='tab:orange', linewidth=2)
+    ax[row, 0].plot(x, pdf(x, *ex_h0_naive.values), label='$H_0$ Fit', linestyle='--', color='tab:green', linewidth=2)
+    ax[row, 0].hist(ex_sample, bins=100, density=True, label='Sample', color='k', histtype='step', alpha=0.35)
+    ax[row, 0].set_title('Naive')
+    ax[row, 0].set_ylabel('Density')
+    ax[row, 0].set_xlim(α, β)
+    title = f'$T$ = {(ex_h0_naive.fval-ex_h1_naive.fval):.2f}'
+    ax[row, 0].legend(handles=[], title=title)
 
-ax[0, 1].plot(x, pdf(x, *ex1_h0_opt.values), color='tab:orange', linewidth=1.5)
-ax[0, 1].plot(x, pdf(x, *ex1_h1_opt.values), color='tab:blue', linestyle='--')
-ax[0, 1].hist(ex1_sample, bins=100, density=True, alpha=0.5, color='k', histtype='step')
-ax[0, 1].plot([], [], ' ', label=f'$T$ = {(ex1_h0_opt.fval-ex1_h1_opt.fval):.2f}')
-ax[0, 1].legend()
-ax[0, 1].set_title('Optimised')
-ax[0, 1].set_xlim(α, β)
+    ax[row, 1].plot(x, pdf(x, *ex_h1_opt.values), color='orange', linewidth=2)
+    ax[row, 1].plot(x, pdf(x, *ex_h0_opt.values), linestyle='--', color='tab:green', linewidth=2)
+    ax[row, 1].hist(ex_sample, bins=100, density=True, color='k', histtype='step', alpha=0.35)
+    ax[row, 1].set_title('Optimised')
+    ax[row, 1].set_xlim(α, β)
+    title = f'$T$ = {(ex_h0_opt.fval-ex_h1_opt.fval):.2f}'
+    ax[row, 1].legend(handles=[], title=title)
 
-ax[1, 0].plot([], [], ' ', label=f'$T$ = {(ex2_h0_naive.fval-ex2_h1_naive.fval):.2f}')
-ax[1, 0].plot(x, pdf(x, *ex2_h0_naive.values), color='tab:orange')
-ax[1, 0].plot(x, pdf(x, *ex2_h1_naive.values), linestyle='--', color='tab:blue')
-ax[1, 0].hist(ex2_sample, bins=100, density=True, alpha=0.5, color='k', histtype='step')
-ax[1, 0].legend()
-ax[1, 0].set_ylabel('Density')
-ax[1, 0].set_xlabel('M')
-ax[1, 0].set_title('Naive')
-ax[1, 0].set_xlim(α, β)
 
-ax[1, 1].plot(x, pdf(x, *ex2_h0_opt.values), color='tab:orange', linewidth=1.5)
-ax[1, 1].plot(x, pdf(x, *ex2_h1_opt.values), color='tab:blue', linestyle='--')
-ax[1, 1].hist(ex2_sample, bins=100, density=True, alpha=0.5, color='k', histtype='step')
-ax[1, 1].plot([], [], ' ', label=f'$T$ = {(ex2_h0_opt.fval-ex2_h1_opt.fval):.2f}')
-ax[1, 1].legend()
-ax[1, 1].set_xlabel('M')
-ax[1, 1].set_xlim(α, β)
-ax[1, 1].set_title('\n\nOptimised')
+
+# Load the sample data
+with open('src/utils/fit_optimisation.pkl', 'rb') as f:
+    ex1_sample, ex2_sample = pickle.load(f)
+
+# Perform the fits
+ex1_h0_opt, ex1_h1_opt = minuit_fit_optimised(ex1_sample, binned=True)
+ex1_h0_naive, ex1_h1_naive = minuit_fit_naive(ex1_sample, binned=True)
+
+ex2_h0_opt, ex2_h1_opt = minuit_fit_optimised(ex2_sample, binned=True)
+ex2_h0_naive, ex2_h1_naive = minuit_fit_naive(ex2_sample, binned=True)
+
+# Create the subplots
+fig, ax = plt.subplots(2, 2, figsize=(11, 9), sharey=True, sharex=True)
+
+# Call the plot function for each subplot
+plot_function(ax, 0, ex1_sample, ex1_h0_naive, ex1_h1_naive, ex1_h0_opt, ex1_h1_opt)
+plot_function(ax, 1, ex2_sample, ex2_h0_naive, ex2_h1_naive, ex2_h0_opt, ex2_h1_opt)
+
+# Trick for displaying separate legend
+lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes[0:1]]
+lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
+fig.legend(lines, labels, loc='center right', ncol=3, fontsize=15)
 
 # Add text in figure coordinates
-plt.figtext(0.5, 0.49, 'Sample 2', ha='center', va='center', fontsize=15)
-
+plt.suptitle('Sample 1', fontsize=15, x=0.52, y=0.96)
+ax[1, 1].set_title('\n\n\nOptimised')
+plt.figtext(0.52, 0.45, 'Sample 2', ha='center', va='center', fontsize=15)
 plt.savefig('report/figures/fit_optimisation.png')

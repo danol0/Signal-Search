@@ -62,6 +62,11 @@ est = mi.values
 # ****************************************** Plot the sample and fit ******************************************
 # *************************************************************************************************************
 
+# Define some colours
+main_colour = '#2A788EFF'
+signal_colour = 'tab:orange'
+background_colour = '#7AD151FF'
+
 # to plot the sample as points with error bars, we need to bin the data
 bins = 90
 y, x = np.histogram(sample, bins=bins, range=[α, β])
@@ -105,14 +110,14 @@ ax_main.errorbar(
     color="k",
 )
 # total pdf
-ax_main.plot(x, numba.pdf(x, *est), label="Fitted distribution", color="tab:blue")
+ax_main.plot(x, numba.pdf(x, *est), label="Fitted distribution", color=main_colour)
 # signal pdf
 ax_main.plot(
     x,
     est["f"] * numba.signal_pdf(x, est["mu"], est["sg"]),
     label="Signal (scaled)",
     linestyle=":",
-    color="g",
+    color=signal_colour,
 )
 # background pdf
 ax_main.plot(
@@ -120,7 +125,7 @@ ax_main.plot(
     (1 - est["f"]) * numba.background_pdf(x, est["lam"]),
     label="Background (scaled)",
     linestyle="--",
-    color="tab:orange",
+    color=background_colour,
 )
 ax_main.set_xlabel("M")
 ax_main.set_ylabel("Density")
@@ -141,7 +146,7 @@ ax_main.legend()
 ax_residuals.errorbar(
     x, residual, y_error, fmt="o", ms=2, capsize=4, capthick=1, elinewidth=1, color="k"
 )
-ax_residuals.axhline(0, color="tab:blue", linewidth=1)
+ax_residuals.axhline(0, color=main_colour, linewidth=1)
 ax_residuals.set_ylabel("Residuals")
 # ax_residuals.set_ylim(-0.19, 0.19)
 
@@ -171,13 +176,13 @@ ax_pulls.errorbar(
     elinewidth=1,
     color="k",
 )
-ax_pulls.axhline(0, color="tab:blue", linewidth=1)
+ax_pulls.axhline(0, color=main_colour, linewidth=1)
 ax_pulls.set_xlabel("$M$")
 ax_pulls.set_ylabel("Pulls")
 
 # pull distribution plot
 ax_pull_dist.hist(
-    pull, bins=10, density=True, alpha=0.5, orientation="horizontal"
+    pull, bins=10, density=True, alpha=0.5, orientation="horizontal",
 )
 ax_pull_dist.xaxis.set_visible(False)
 ax_pull_dist.spines[["top", "bottom", "right"]].set_visible(False)

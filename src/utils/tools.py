@@ -211,13 +211,15 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
 
     # -------- Plot 1: T distribution under H0 and χ2 fit
 
+    blue = '#2A788EFF'
+
     bins = 100 if dof > 2 else 50   # reduce bins for small dof to avoid distorting near 0
     plt.figure(figsize=(8, 6))
-    plt.hist(H0_sim, bins=bins, density=True, label="$P(T|H_0)$", histtype="step", color='tab:blue')
+    plt.hist(H0_sim, bins=bins, density=True, label="$P(T|H_0)$", histtype="step", color=blue)
     # show T samples on x axis
-    plt.scatter(H0_sim, np.zeros_like(H0_sim), alpha=0.5, marker=2, color='tab:blue')
+    plt.scatter(H0_sim, np.zeros_like(H0_sim), alpha=0.5, marker=2, color=blue)
     # add a single T sample for legend
-    plt.scatter(0, 0, alpha=0.5, marker=2, color='tab:blue', label="T samples")
+    plt.scatter(0, 0, alpha=0.5, marker=2, color=blue, label="T samples")
     plt.plot(
         np.linspace(0, int(T_c * 1.1), 200),
         chi2.pdf(np.linspace(0, int(T_c * 1.1), 200), dof),
@@ -293,18 +295,18 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
     )
 
     # plot sigmoid fit
-    plt.plot(x, sigmoid(x, *sigmoid_fit), label="Sigmoid fit", linestyle="-", color="tab:blue")
+    plt.plot(x, sigmoid(x, *sigmoid_fit), label="Sigmoid fit", linestyle="-", color="#2A788EFF")
 
     # add line for critical value
     plt.axhline(0.9, color="k", linestyle="--", label="90% power", linewidth=1)
 
     # add sample size for 90% power and error
-    plt.axvline(x90, color="tab:blue", linestyle=":", label="{:.0f} ± {:.0f} samples".format(x90, x90_e))
+    plt.axvline(x90, color="#2A788EFF", linestyle=":", label="{:.0f} ± {:.0f} samples".format(x90, x90_e))
     plt.axvspan(
         x90 - x90_e,
         x90 + x90_e,
         alpha=0.1,
-        color="tab:blue",
+        color="#2A788EFF",
     )
 
     plt.legend(framealpha=1)

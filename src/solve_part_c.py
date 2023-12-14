@@ -63,9 +63,14 @@ for i in xs:
 plt.figure(figsize=(8, 6))
 plt.style.use('src/utils/mphil.mplstyle')
 
-plt.plot(xs, np.array(analytical_times) / np.array(analytical_times), label='Analytical', color='tab:blue', linestyle='--')
-plt.plot(xs, np.array(analytical_times) / np.array(scipy_times), label='SciPy', color='tab:orange')
-plt.plot(xs, np.array(analytical_times) / np.array(numba_times), label='Numba', color='tab:green')
+# Set colours
+blue = '#2A788EFF'
+purple = 'tab:orange'
+green = 'tab:green'
+
+plt.plot(xs, np.array(analytical_times) / np.array(analytical_times), label='Analytical', color=purple, linestyle='--')
+plt.plot(xs, np.array(analytical_times) / np.array(scipy_times), label='SciPy', color=blue)
+plt.plot(xs, np.array(analytical_times) / np.array(numba_times), label='Numba', color=green)
 plt.xlabel('Input Array Size')
 plt.ylabel('Evaluation Speed (relative to analytical)')
 plt.legend()
