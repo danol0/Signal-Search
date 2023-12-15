@@ -74,4 +74,4 @@ plt.plot(xs, np.array(analytical_times) / np.array(numba_times), label='Numba', 
 plt.xlabel('Input Array Size')
 plt.ylabel('Evaluation Speed (relative to analytical)')
 plt.legend()
-plt.savefig('report/figures/part_c_eval_time.png')
+plt.savefig('report/figures/part_c_eval_time.png', bbox_inches='tight')

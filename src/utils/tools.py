@@ -236,7 +236,7 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
     plt.xlabel("T")
     plt.ylabel("p(T)")
     plt.legend(loc="upper center")
-    plt.savefig("report/figures/" + file_name + "_H0_distribution.png")
+    plt.savefig("report/figures/" + file_name + "_H0_distribution.png", bbox_inches="tight")
 
     # -------- Plot 2: T distribution under H1
 
@@ -266,7 +266,7 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
     plt.ylim(0, 0.08)
     plt.xlim(0, 100)
     plt.legend(handles=[p[2][0] for p in plot], title='$P(T|H_1)$ Sample Size', ncols=2)
-    plt.savefig("report/figures/" + file_name + "_H1_distribution.png")
+    plt.savefig("report/figures/" + file_name + "_H1_distribution.png", bbox_inches="tight")
 
     # -------- Plot 3: Power vs Sample Size
 
@@ -277,7 +277,7 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
         sample_sizes,
         power,
         power_e,
-        label="Power with propagated error",
+        label="Power",
         fmt="o",
         ms=3,
         capsize=3,
@@ -297,8 +297,8 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
     # plot sigmoid fit
     plt.plot(x, sigmoid(x, *sigmoid_fit), label="Sigmoid fit", linestyle="-", color="#2A788EFF")
 
-    # add line for critical value
-    plt.axhline(0.9, color="k", linestyle="--", label="90% power", linewidth=1)
+    # add line for 90% power
+    plt.axhline(0.9, color="k", linestyle="--", label="0.9 Power", linewidth=1)
 
     # add sample size for 90% power and error
     plt.axvline(x90, color="#2A788EFF", linestyle=":", label="{:.0f} ± {:.0f} samples".format(x90, x90_e))
@@ -313,4 +313,4 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
     plt.xlabel("Sample Size")
     plt.ylabel("Power")
 
-    plt.savefig("report/figures/" + file_name + "_power.png")
+    plt.savefig("report/figures/" + file_name + "_power.png", bbox_inches="tight")

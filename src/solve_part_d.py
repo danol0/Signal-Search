@@ -23,7 +23,7 @@ fig = plt.figure(figsize=(7, 5))
 # Set colours
 main_colour = '#2A788EFF'
 signal_colour = 'tab:orange'
-background_colour = '#7AD151FF'
+background_colour = 'tab:green'
 
 x = np.linspace(α, β, 200, endpoint=False)
 plt.plot(x, numba.pdf(x, *theta), label="Total", color=main_colour)
@@ -34,4 +34,4 @@ plt.ylabel("P(M)")
 plt.legend()
 
 # save the figure
-plt.savefig('report/figures/part_d_result.png')
+plt.savefig('report/figures/part_d_result.png', bbox_inches='tight')

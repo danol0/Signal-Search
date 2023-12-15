@@ -62,10 +62,10 @@ est = mi.values
 # ****************************************** Plot the sample and fit ******************************************
 # *************************************************************************************************************
 
-# Define some colours
+# define some colours
 main_colour = '#2A788EFF'
 signal_colour = 'tab:orange'
-background_colour = '#7AD151FF'
+background_colour = 'tab:green'
 
 # to plot the sample as points with error bars, we need to bin the data
 bins = 90
@@ -76,8 +76,9 @@ bin_width = x[1] - x[0]
 x = np.mean(np.vstack([x[1:], x[:-1]]), axis=0)
 
 # normalise y & error
-y_n = y / (bin_width * np.sum(y))
-y_error = (y_n / (len(sample) * bin_width)) ** 0.5
+scale_factor = 1 / np.sum(y) / bin_width
+y_n = y * scale_factor
+y_error = scale_factor * y ** 0.5
 
 # calculate the residuals and pulls
 residual = y_n - numba.pdf(x, *est)
@@ -193,4 +194,4 @@ xp = np.linspace(-3.5, 3.5, 100)
 ax_pull_dist.plot(norm.pdf(xp, loc=0, scale=1), xp, "r-", alpha=0.5)
 
 fig.align_ylabels()
-plt.savefig("report/figures/part_e_result.png")
+plt.savefig("report/figures/part_e_result.png", bbox_inches="tight")

@@ -105,17 +105,17 @@ x = np.linspace(α, β-0.001, 100)
 
 def plot_function(ax, row, ex_sample, ex_h0_naive, ex_h1_naive, ex_h0_opt, ex_h1_opt):
 
-    ax[row, 0].plot(x, pdf(x, *ex_h1_naive.values), label='$H_1$ Fit', color='tab:orange', linewidth=2)
-    ax[row, 0].plot(x, pdf(x, *ex_h0_naive.values), label='$H_0$ Fit', linestyle='--', color='tab:green', linewidth=2)
+    ax[row, 0].plot(x, pdf(x, *ex_h1_naive.values), label='$H_1$ Fit', color='tab:orange', linewidth=1.6)
+    ax[row, 0].plot(x, pdf(x, *ex_h0_naive.values), label='$H_0$ Fit', linestyle='--', color='tab:green', linewidth=1.6)
     ax[row, 0].hist(ex_sample, bins=100, density=True, label='Sample', color='k', histtype='step', alpha=0.35)
-    ax[row, 0].set_title('Naive')
+    ax[row, 0].set_title('Original')
     ax[row, 0].set_ylabel('Density')
     ax[row, 0].set_xlim(α, β)
     title = f'$T$ = {(ex_h0_naive.fval-ex_h1_naive.fval):.2f}'
     ax[row, 0].legend(handles=[], title=title)
 
-    ax[row, 1].plot(x, pdf(x, *ex_h1_opt.values), color='orange', linewidth=2)
-    ax[row, 1].plot(x, pdf(x, *ex_h0_opt.values), linestyle='--', color='tab:green', linewidth=2)
+    ax[row, 1].plot(x, pdf(x, *ex_h1_opt.values), color='orange', linewidth=1.6)
+    ax[row, 1].plot(x, pdf(x, *ex_h0_opt.values), linestyle='--', color='tab:green', linewidth=1.6)
     ax[row, 1].hist(ex_sample, bins=100, density=True, color='k', histtype='step', alpha=0.35)
     ax[row, 1].set_title('Optimised')
     ax[row, 1].set_xlim(α, β)
@@ -151,4 +151,4 @@ fig.legend(lines, labels, loc='center right', ncol=3, fontsize=15)
 plt.suptitle('Sample 1', fontsize=15, x=0.52, y=0.96)
 ax[1, 1].set_title('\n\n\nOptimised')
 plt.figtext(0.52, 0.45, 'Sample 2', ha='center', va='center', fontsize=15)
-plt.savefig('report/figures/fit_optimisation.png')
+plt.savefig('report/figures/fit_optimisation.png', bbox_inches='tight')
