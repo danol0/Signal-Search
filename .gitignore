@@ -1,8 +1,8 @@
 DIS_MPhil_S1_Coursework_Final.pdf
 report/*
 !report/figures
-!report/report.tex
-!report/report.pdf
-!report/poweranalysis.bib
+!report/*.tex
+!report/*.pdf
+!report/*.bib
 *ipynb
 *.pyc
