@@ -64,8 +64,8 @@ est = mi.values
 
 # define some colours
 main_colour = '#2A788EFF'
-signal_colour = 'tab:orange'
-background_colour = 'tab:green'
+signal_colour = 'tab:green'
+background_colour = 'tab:orange'
 
 # to plot the sample as points with error bars, we need to bin the data
 bins = 90

@@ -22,8 +22,8 @@ fig = plt.figure(figsize=(7, 5))
 
 # Set colours
 main_colour = '#2A788EFF'
-signal_colour = 'tab:orange'
-background_colour = 'tab:green'
+signal_colour = 'tab:green'
+background_colour = 'tab:orange'
 
 x = np.linspace(α, β, 200, endpoint=False)
 plt.plot(x, numba.pdf(x, *theta), label="Total", color=main_colour)
