@@ -10,7 +10,7 @@ plt.style.use("src/utils/mphil.mplstyle")
 # *********************************************** IMPORTANT ***************************************************
 # This parameter controls whether the simulation study is run or the results are loaded from file
 # Set to True to run the simulation study, or False to load from file
-run = False
+run = True
 
 # *************************************************************************************************************
 # ************************************* Initialise Parameters *************************************************
