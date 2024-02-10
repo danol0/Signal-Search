@@ -1,4 +1,4 @@
-name: do382_PDS_CW
+name: signal_search
 channels:
   - defaults
   - conda-forge
