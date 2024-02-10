@@ -1,5 +1,3 @@
-# Matt's mpl style file for the MPhil code
-
 axes.labelsize : 13
 
 xtick.labelsize : 11

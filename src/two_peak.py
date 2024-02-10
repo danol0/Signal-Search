@@ -5,10 +5,8 @@ from iminuit import Minuit
 import numpy as np
 import pickle
 
-# *********************************************** IMPORTANT ***************************************************
-# This parameter controls whether the simulation study is run or the results are loaded from file
 # Set to True to run the simulation study, or False to load from file
-run = True
+run = False
 
 # *************************************************************************************************************
 # ************************************* Initialise Parameters *************************************************
@@ -138,5 +136,5 @@ else:
 dof, dof_e = fit_chi2_dof(H0_sim)
 
 plot_simulation_study(
-    H0_sim=H0_sim, sim=sim, sample_sizes=sample_sizes, dof=dof, dof_e=dof_e, file_name="part_g"
+    H0_sim=H0_sim, sim=sim, sample_sizes=sample_sizes, dof=dof, dof_e=dof_e, file_name="two_peak"
 )

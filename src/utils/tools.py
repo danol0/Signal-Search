@@ -3,17 +3,16 @@ from tqdm import tqdm
 import numpy as np
 from scipy.stats import chi2
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gs
 from scipy.optimize import curve_fit
 from iminuit.cost import BinnedNLL
 from iminuit import Minuit
 from jacobi import propagate
-plt.style.use("src/utils/mphil.mplstyle")
+plt.style.use("src/utils/signal.mplstyle")
 
 
 def accept_reject(f, xlim, samples):
     """
-    This function generates samples from a distribution using an optimised accept-reject method.
+    This function generates samples from a distribution using an accept-reject method.
 
     Parameters
     ----------
@@ -30,7 +29,7 @@ def accept_reject(f, xlim, samples):
         The generated samples.
     """
 
-    # find maximum of f
+    # find maximum of f for upper bound
     argmax = brute(lambda x: -f(x), [xlim], disp=False)[0]
     argmax = minimize(lambda x: -f(x), argmax, bounds=[xlim]).x[0]
     fmax = f(argmax)
@@ -38,11 +37,10 @@ def accept_reject(f, xlim, samples):
     events = np.empty(0)
 
     while len(events) < samples:
-        # generate x and y
+
         x = np.random.uniform(*xlim, samples)
         y = np.random.uniform(0, fmax, samples)
 
-        # accept-reject
         events = np.append(events, x[y < f(x)])
 
         # check for an fmax violation and reset the sample if necessary
@@ -83,22 +81,19 @@ def simulation_study(sample_sizes, repeats, pdf, pdf_params, xlim, fit, binned=F
 
     sim = []
 
-    # for each sample size
     for s in sample_sizes:
         test_statistics = []
 
-        # run r repeats
         with tqdm(total=repeats, desc=f"Sample Size: {s}") as pbar:
             while len(test_statistics) < repeats:
-                # generate a sample
+
                 sample = accept_reject(
                     f=lambda x: pdf(x, *pdf_params), xlim=xlim, samples=s
                 )
 
-                # fit the sample
                 mi_h0, mi_h1 = fit(sample, binned=binned)
 
-                # if fit is valid, calculate the test statistic
+
                 if mi_h0.valid and mi_h1.valid:
                     # Note that factor of 2 is included in the iminuit definition of fval
                     T = mi_h0.fval - mi_h1.fval
@@ -124,7 +119,6 @@ def fit_chi2_dof(H0_sim):
         The test statistics under H0.
     """
 
-    # define chi2 distribution for fitting
     def chi2_fit(x, dof):
         return chi2.cdf(x, dof)
 
@@ -146,32 +140,40 @@ def fit_chi2_dof(H0_sim):
     return mi.values["dof"], mi.errors['dof']
 
 
-def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
+def sigmoid(x, a, b, c, d):
+    """Define a sigmoid for plots & fits."""
+    return a / (1 + np.exp(-b * (x - c))) + d
+
+
+def analyse_power(sim, sample_sizes, dof, dof_e):
     """
-    This function plots the results of the simulation study.
-
-    The plots are:
-        1. The T distribution under H0.
-        2. The T distribution under H1.
-        3. The power vs sample size.
-
-    The calculations error propagation is carried out in the top of the function.
+    This function analyses the power of the hypothesis test and returns the power, power error,
+    sample size for 90% power, sample size error, and the critical value at 5σ.
 
     Parameters
     ----------
-    H0_sim : array_like
-        The test statistics under H0.
     sim : array_like
         The test statistics under H1.
     sample_sizes : array_like
         The sample sizes used.
     dof : float
         The degrees of freedom.
-    file_name : str
-        The file name to save the plots as.
-    """
+    dof_e : float
+        The error on the degrees of freedom.
 
-    # -------- Calculate p-values and power, with propagated errors
+    Returns
+    -------
+    power : array_like
+        The power for each sample size.
+    power_e : array_like
+        The error on the power for each sample size.
+    x90 : float
+        The sample size for 90% power.
+    x90_e : float
+        The error on the sample size for 90% power.
+    T_c : float
+        The critical value at 5σ.
+    """
 
     # define critical value at 5σ for plotting
     T_c = chi2.ppf(1 - 2.9e-7, dof)
@@ -193,11 +195,7 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
     # To estimate the sample size for 90% power, fit a sigmoid to the power vs sample size and interpolate
     # the sample size needed for 90% power. Can again propagate the error on this with jacobi
 
-    # define sigmoid function
-    def sigmoid(x, a, b, c, d):
-        return a / (1 + np.exp(-b * (x - c))) + d
-
-    # define x values for sigmoid fit and plotting
+    # define x values for sigmoid fit
     x = np.linspace(sample_sizes[0], sample_sizes[-1], 300)
 
     # function for estimating 90% power from sigmoid fit for error propagation
@@ -205,9 +203,38 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
         popt, _ = curve_fit(sigmoid, sample_sizes, power, p0=[1, 0, np.median(sample_sizes), 0], maxfev=10000)
         return np.interp(0.9, sigmoid(x, *popt), x)
 
-    # estimate 90% and error
     x90, x90_var = propagate(estimate_intercept, power, power_var)
     x90_e = np.sqrt(x90_var)
+
+    return power, power_e, x90, x90_e, T_c
+
+
+def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
+    """
+    This function plots the results of the simulation study.
+
+    The plots are:
+        1. The T distribution under H0.
+        2. The T distribution under H1.
+        3. The power vs sample size.
+
+    Parameters
+    ----------
+    H0_sim : array_like
+        The test statistics under H0.
+    sim : array_like
+        The test statistics under H1.
+    sample_sizes : array_like
+        The sample sizes used.
+    dof : float
+        The degrees of freedom.
+    file_name : str
+        The file name to save the plots as.
+    """
+
+    x = np.linspace(sample_sizes[0], sample_sizes[-1], 300)
+
+    power, power_e, x90, x90_e, T_c = analyse_power(H0_sim, sim, sample_sizes, dof, dof_e)
 
     # -------- Plot 1: T distribution under H0 and χ2 fit
 
@@ -236,7 +263,7 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
     plt.xlabel("T")
     plt.ylabel("p(T)")
     plt.legend(loc="upper center")
-    plt.savefig("report/figures/" + file_name + "_H0_distribution.png", bbox_inches="tight")
+    plt.savefig("figures/" + file_name + "_H0_distribution.png", bbox_inches="tight")
 
     # -------- Plot 2: T distribution under H1
 
@@ -266,7 +293,7 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
     plt.ylim(0, 0.08)
     plt.xlim(0, 100)
     plt.legend(handles=[p[2][0] for p in plot], title='$P(T|H_1)$ Sample Size', ncols=2)
-    plt.savefig("report/figures/" + file_name + "_H1_distribution.png", bbox_inches="tight")
+    plt.savefig("figures/" + file_name + "_H1_distribution.png", bbox_inches="tight")
 
     # -------- Plot 3: Power vs Sample Size
 
@@ -313,4 +340,4 @@ def plot_simulation_study(H0_sim, sim, sample_sizes, dof, dof_e, file_name):
     plt.xlabel("Sample Size")
     plt.ylabel("Power")
 
-    plt.savefig("report/figures/" + file_name + "_power.png", bbox_inches="tight")
+    plt.savefig("figures/" + file_name + "_power.png", bbox_inches="tight")
