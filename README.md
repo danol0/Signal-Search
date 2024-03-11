@@ -15,13 +15,3 @@ $H_1$: $P(X) = f_1 \cdot \cal{N}(\mu_1, \sigma_1) + f_2 \cdot \cal{N}(\mu_2, \si
 More details can be found in the distributions module.
 
 ![Sample and fit](figures/sample_and_fit.png)
-
-## Installation
-The required packages can be installed with the following command:
-```bash
-conda env create -f environment.yml
-```
-This will create a new conda environment called `signal_search` with all the required packages. The environment can be activated with:
-```bash
-conda activate signal_search
-```
